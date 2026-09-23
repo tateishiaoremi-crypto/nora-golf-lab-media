@@ -1,61 +1,60 @@
 name: Ingest media
 
 on:
-  issues:
-    types: [opened]
+  push:
+    branches: [main]
+    paths:
+      - 'ingest/*.txt'
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   ingest:
-    if: startsWith(github.event.issue.title, '[media-ingest]')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Download media listed in issue
-        env:
-          ISSUE_BODY: ${{ github.event.issue.body }}
+      - name: Download media from manifests
         run: |
           set -euo pipefail
+          shopt -s nullglob
+          manifests=(ingest/*.txt)
+          if [ ${#manifests[@]} -eq 0 ]; then
+            echo "No manifests"
+            exit 0
+          fi
           python - <<'PY'
-          import os, subprocess
-          body = os.environ.get("ISSUE_BODY", "")
-          lines = [x.strip() for x in body.splitlines() if x.strip()]
-          for line in lines:
-              if "|" not in line:
-                  continue
-              filename, url = line.split("|", 1)
-              filename = filename.strip()
-              url = url.strip()
-              if not filename or not url:
-                  continue
-              if "/" in filename or "\\" in filename:
-                  raise SystemExit(f"invalid filename: {filename}")
-              subprocess.run(["curl","-L","--fail","--silent","--show-error",url,"-o",filename], check=True)
+          from pathlib import Path
+          import subprocess
+          for manifest in Path("ingest").glob("*.txt"):
+              for raw in manifest.read_text().splitlines():
+                  line = raw.strip()
+                  if not line or "|" not in line:
+                      continue
+                  filename, url = line.split("|", 1)
+                  filename, url = filename.strip(), url.strip()
+                  if not filename or not url or "/" in filename or "\\" in filename:
+                      raise SystemExit(f"invalid manifest line: {line}")
+                  subprocess.run(
+                      ["curl","-L","--fail","--silent","--show-error",url,"-o",filename],
+                      check=True
+                  )
           PY
 
-      - name: Commit media
+      - name: Remove manifests and commit media
         run: |
           set -euo pipefail
+          rm -f ingest/*.txt
           git config user.name "nora-golf-lab-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add .
+          git add -A
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Add media for Instagram publishing"
+            git commit -m "Add media for Instagram publishing [skip ci]"
             git push
           fi
-
-      - name: Scrub temporary URLs from issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          gh issue edit "$ISSUE_NUMBER" --body "Media ingested automatically."
-          gh issue close "$ISSUE_NUMBER" --reason completed
