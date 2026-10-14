@@ -17,7 +17,7 @@ import urllib.request
 REPOSITORY = "tateishiaoremi-crypto/nora-golf-lab-media"
 EXPECTED_USERNAME = "nora_golf_lab"
 EXPECTED_IG_ID = "17841428397719857"
-VERSION = os.getenv("INSTAGRAM_GRAPH_VERSION", "v25.0")
+VERSION = os.getenv("INSTAGRAM_GRAPH_VERSION", "v26.0")
 BASE = f"https://graph.facebook.com/{VERSION}"
 ROOT = Path.cwd().resolve()
 
