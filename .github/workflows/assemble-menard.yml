@@ -1,0 +1,70 @@
+name: Assemble Menard 4-to-5 mixed carousel (draft only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/2026-10-10-menard/assemble-trigger.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Reframe cover and cut five synchronized swing segments
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="posts/2026-10-10-menard"
+          out="$base/carousel"
+          mkdir -p "$out"
+          ffmpeg -nostdin -hide_banner -loglevel error -y -i "$base/all-cover.jpg" -vf "crop=720:900:0:210,scale=1080:1350:flags=lanczos" -frames:v 1 -q:v 2 "$out/cover.jpg"
+          for i in 0 1 2 3 4; do
+            start=$((i*5))
+            num=$(printf "%02d" $((i+1)))
+            ffmpeg -nostdin -hide_banner -loglevel error -y -i "$base/swings.mp4" -ss "$start" -t 5 -map 0:v:0 -map 0:a:0 -vf "crop=720:900:0:230,scale=1080:1350:flags=lanczos,setsar=1" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a aac -b:a 160k -ar 48000 -movflags +faststart "$out/swing-$num.mp4"
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$out/swing-$num.mp4"
+            ffmpeg -nostdin -hide_banner -loglevel error -y -ss 2 -i "$out/swing-$num.mp4" -frames:v 1 -q:v 5 "$out/preview-$num.jpg"
+          done
+          ffmpeg -nostdin -hide_banner -loglevel error -y -i "$out/cover.jpg" -frames:v 1 -q:v 6 "$out/cover-preview.jpg"
+      - name: Prepare draft carousel manifest and contact sheet
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("posts/2026-10-10-menard")
+          files=[{"type":"image","path":str(p/"carousel/cover.jpg")},
+                 {"type":"image","path":str(p/"photo-2.jpg")}]
+          for n in range(1,6):
+              files.append({"type":"video","path":str(p/f"carousel/swing-{n:02}.mp4"),"source_interval_seconds":[5*(n-1),5*n],"framing_approved":False})
+          files.append({"type":"image","path":str(p/"photo-3.jpg")})
+          data={"version":1,"username":"nora_golf_lab","status":"draft",
+                "caption":"90は打たないと誓ったのに。\n\nメナード青山、IN45 / OUT45 の90。笑\nパット31、OB5。そら90いくわ。😭\n\n仲間のスイングもまとめて1投稿に。\n森井、さすがのスイング⛳️\n前夜祭で吐いてたのに朝イチこれ打てるのは、酒を言い訳に出来んくなるわ😭\n\n次は片山津・白山コース。\n\n#nora_golf_lab #ゴルフ #ゴルフ仲間 #ゴルフスイング #bkndr",
+                "items":files,"editing_notes":"Split each 5-second section from the same video/audio source. Original frame y=230..1130; do not publish without audiovisual spot-check and explicit approval."}
+          (p/"instagram-carousel.json").write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n",encoding="utf8")
+          PY
+          base64 -w0 posts/2026-10-10-menard/carousel/cover-preview.jpg > posts/2026-10-10-menard/carousel/cover-preview.txt
+          for n in 01 02 03 04 05; do
+            base64 -w0 "posts/2026-10-10-menard/carousel/preview-$n.jpg" > "posts/2026-10-10-menard/carousel/preview-$n.txt"
+          done
+      - name: Commit draft (never publish)
+        run: |
+          git config user.name "nora-golf-lab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add posts/2026-10-10-menard/carousel/ posts/2026-10-10-menard/instagram-carousel.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Prepare Menard eight-item mixed carousel draft [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
