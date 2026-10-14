@@ -1,0 +1,52 @@
+name: Restore Mori name plate on carousel fifth swing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/2026-10-10-menard/mori-label-trigger.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install video renderer and Japanese fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-cjk
+      - name: Add small black-and-gold Mori plate without changing audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="posts/2026-10-10-menard/carousel"
+          font="$(fc-match -f '%{file}' 'Noto Sans CJK JP:style=Bold' | head -1)"
+          test -f "$font"
+          ffmpeg -nostdin -loglevel error -y -i "$base/swing-05.mp4" -map 0:v:0 -map 0:a:0 -vf "drawbox=x=800:y=145:w=230:h=102:color=0xD3AE66:t=3,drawbox=x=803:y=148:w=224:h=96:color=0x0C110F@0.88:t=fill,drawtext=fontfile='$font':text='森井':fontcolor=0xD3AE66:fontsize=60:x=849:y=162" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a copy -movflags +faststart "$base/swing-05-mori.mp4"
+          ffmpeg -nostdin -loglevel error -y -ss 2 -i "$base/swing-05-mori.mp4" -frames:v 1 -q:v 5 "$base/preview-05-mori.jpg"
+          base64 -w0 "$base/preview-05-mori.jpg" > "$base/preview-05-mori.txt"
+      - name: Update draft and commit
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("posts/2026-10-10-menard/instagram-carousel.json")
+          j=json.loads(p.read_text())
+          assert j["status"]=="draft"
+          j["items"][6]["path"]="posts/2026-10-10-menard/carousel/swing-05-mori.mp4"
+          j["items"][6]["name"]="森井"
+          p.write_text(json.dumps(j,ensure_ascii=False,indent=2)+"\n")
+          PY
+          git config user.name "nora-golf-lab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add posts/2026-10-10-menard/carousel/swing-05-mori.mp4 posts/2026-10-10-menard/carousel/preview-05-mori.* posts/2026-10-10-menard/instagram-carousel.json
+          git commit -m "Restore Mori label on fifth swing and keep carousel draft [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
