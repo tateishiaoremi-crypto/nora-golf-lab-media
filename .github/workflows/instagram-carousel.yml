@@ -1,0 +1,67 @@
+name: Publish approved Instagram carousel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/**/instagram-carousel.json"
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: "Path to posts/.../instagram-carousel.json"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-carousel-publishing
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Prepare Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check publisher syntax
+        run: python -m py_compile scripts/publish_instagram_carousel.py
+      - name: Validate and publish only approved manifests
+        shell: bash
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            paths=( "${{ inputs.manifest }}" )
+          else
+            mapfile -t paths < <(git diff --name-only HEAD^ HEAD -- ':(glob)posts/**/instagram-carousel.json')
+          fi
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo "No changed carousel manifest."
+            exit 0
+          fi
+          for manifest in "${paths[@]}"; do
+            echo "Processing: $manifest"
+            python scripts/publish_instagram_carousel.py "$manifest"
+          done
+      - name: Commit publication receipt only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A -- posts
+          if git diff --cached --quiet; then
+            echo "No new publication receipts."
+            exit 0
+          fi
+          git config user.name "nora-golf-lab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Record published Instagram carousel [skip ci]"
+          git push
