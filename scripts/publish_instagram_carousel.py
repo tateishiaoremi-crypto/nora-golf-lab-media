@@ -88,6 +88,10 @@ def preflight(manifest_path):
         if kind == "image" and not 0.799 <= ratio <= 1.911:
             raise ValueError(f"item {index}: JPEG aspect ratio {ratio:.3f} outside 4:5 to 1.91:1")
         if kind == "video":
+            if not 0.799 <= ratio <= 1.911:
+                print(f"FRAMING REVIEW NEEDED: item {index} has {ratio:.3f} aspect ratio; first carousel image uses a 4:5 layout")
+                if manifest["status"] == "approved" and not item.get("framing_approved"):
+                    raise ValueError(f"item {index}: video framing must be reviewed before approval")
             if video.get("codec_name") not in ("h264", "hevc"):
                 raise ValueError(f"item {index}: video must use H264/HEVC")
             if not any(s.get("codec_type") == "audio" for s in meta.get("streams", [])):
