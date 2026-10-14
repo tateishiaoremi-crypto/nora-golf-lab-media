@@ -41,10 +41,11 @@ jobs:
         shell: bash
         env:
           INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+          MANIFEST_INPUT: ${{ inputs.manifest }}
         run: |
           set -euo pipefail
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            paths=( "${{ inputs.manifest }}" )
+            paths=( "$MANIFEST_INPUT" )
           else
             mapfile -t paths < <(git diff --name-only HEAD^ HEAD -- ':(glob)posts/**/instagram-carousel.json')
           fi
@@ -68,4 +69,5 @@ jobs:
           git config user.name "nora-golf-lab-bot"
           git config user.email "actions@users.noreply.github.com"
           git commit -m "Record published Instagram carousel [skip ci]"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
