@@ -1,0 +1,30 @@
+name: Check Instagram API access
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-instagram-access.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      IG_TOKEN: ${{ secrets.IG_TOKEN }}
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+    steps:
+      - name: Check Graph API token without disclosing it
+        shell: bash
+        run: |
+          if [[ -n "$IG_ACCESS_TOKEN" || -n "$INSTAGRAM_ACCESS_TOKEN" || -n "$META_ACCESS_TOKEN" || -n "$IG_TOKEN" || -n "$META_TOKEN" ]]; then
+            echo "Existing GitHub Actions Graph API credential found."
+          else
+            echo "::error::No Graph API access token is configured under the supported secret names in this repository."
+            exit 1
+          fi
