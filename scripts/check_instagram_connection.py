@@ -12,8 +12,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API = "https://graph.facebook.com/v26.0"
-IG_ID = "17841428397719857"
+API = "https://graph.instagram.com/v26.0"
 IG_USERNAME = "nora_golf_lab"
 SAMPLE_JPEG = (
     "https://raw.githubusercontent.com/"
@@ -45,15 +44,16 @@ def main():
     if not token:
         raise RuntimeError(
             "GitHub Actions secret INSTAGRAM_GRAPH_TOKEN not configured. "
-            "Add the Page Access Token in repository Actions secrets."
+            "Add the Instagram Login user token in repository Actions secrets."
         )
-    identity = request("GET", f"{IG_ID}?fields=id,username", token)
-    if str(identity.get("id")) != IG_ID or identity.get("username") != IG_USERNAME:
+    identity = request("GET", "me?fields=id,username", token)
+    ig_id = str(identity.get("id", ""))
+    if not ig_id.isdigit() or identity.get("username") != IG_USERNAME:
         raise RuntimeError("The access token does not belong to nora_golf_lab.")
     print("PASS: Verified nora_golf_lab account identity.")
 
     # Creates a temporary media container, but does NOT publish it.
-    result = request("POST", f"{IG_ID}/media", token, {
+    result = request("POST", f"{ig_id}/media", token, {
         "image_url": SAMPLE_JPEG,
     })
     if not result.get("id"):
