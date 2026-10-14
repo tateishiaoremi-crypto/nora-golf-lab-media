@@ -29,7 +29,8 @@ def main():
             opts["media_type"]="VIDEO"
             opts["video_url"]=source
         new=api("POST",f"{ig}/media",token,opts)
-        await_ready(token,new["id"])
+        if item["type"] == "video":
+            await_ready(token,new["id"],max_seconds=240)
         ids.append(str(new["id"]))
         print(f"Item {index}/8: {item['type']} ready.",flush=True)
     outer=api("POST",f"{ig}/media",token,{"media_type":"CAROUSEL","children":",".join(ids),"caption":manifest["caption"]})
