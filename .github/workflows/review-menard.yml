@@ -1,0 +1,36 @@
+name: Review Menard carousel media (no publishing)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/2026-10-10-menard/review-trigger.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg and prepare contact sheets
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          mkdir -p posts/2026-10-10-menard/review
+          for kind in swings all-in-one; do
+            path="posts/2026-10-10-menard/$kind.mp4"
+            ffprobe -v error -show_streams -show_format -of json "$path" > "posts/2026-10-10-menard/review/$kind-metadata.json"
+            ffmpeg -loglevel error -y -i "$path" -vf "fps=1,scale=192:320:force_original_aspect_ratio=decrease,pad=192:320:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='%{pts\\:hms}':fontcolor=yellow:fontsize=16:x=10:y=10:box=1:boxcolor=black@0.6,tile=5x10" -frames:v 1 -q:v 5 "posts/2026-10-10-menard/review/$kind-contact.jpg"
+            base64 -w 0 "posts/2026-10-10-menard/review/$kind-contact.jpg" > "posts/2026-10-10-menard/review/$kind-contact.txt"
+          done
+      - name: Commit review artifacts
+        run: |
+          git config user.name "nora-golf-lab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add posts/2026-10-10-menard/review/
+          git commit -m "Add internal media contact sheets for review [skip ci]"
+          git push
