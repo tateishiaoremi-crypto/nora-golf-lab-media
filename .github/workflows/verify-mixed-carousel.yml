@@ -1,0 +1,22 @@
+name: Verify unpublished mixed Instagram carousel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "connection-check/mixed.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-mixed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify image+video carousel preparation without publishing
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        run: python3 scripts/check_mixed_carousel.py
