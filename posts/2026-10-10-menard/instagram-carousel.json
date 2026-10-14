@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "username": "nora_golf_lab",
+  "status": "draft",
+  "caption": "90は打たないと誓ったのに。\n\n10/10 メナード青山。まさかの90。笑\n良かったショットもミスも、全部記録。\n\n#nora_golf_lab #ゴルフ #ゴルフスイング #bkndr",
+  "items": [
+    {
+      "type": "image",
+      "path": "posts/2026-10-10-menard/photo-2.jpg"
+    },
+    {
+      "type": "image",
+      "path": "posts/2026-10-10-menard/photo-1.jpg"
+    },
+    {
+      "type": "image",
+      "path": "posts/2026-10-10-menard/photo-3.jpg"
+    },
+    {
+      "type": "video",
+      "path": "posts/2026-10-10-menard/swings.mp4"
+    }
+  ]
+}
