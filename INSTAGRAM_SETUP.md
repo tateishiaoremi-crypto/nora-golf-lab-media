@@ -1,12 +1,20 @@
 # nora_golf_lab — Instagram Login API setup
 
+## Verified on 2026-10-14
+- **Instagram Login token saved in GitHub Actions secrets**, and authenticated as `nora_golf_lab`.
+- Connection test PASS: https://github.com/tateishiaoremi-crypto/nora-golf-lab-media/actions/runs/38591192510
+- **Mixed image + video carousel creation test PASS** (Meta API accepted the photo item, processed the video, and created the carousel container): https://github.com/tateishiaoremi-crypto/nora-golf-lab-media/actions/runs/38591556527
+- Both tests deliberately omitted `media_publish`. **NO new Instagram post was published.**
+- Publishing the October 10 carousel is still gated on final media/caption review and explicit approval.
+- The manually generated token may need renewal, usually within about 60 days. Token renewal automation is not yet configured; expiry can interrupt posting.
+
 ## Confirmed current state
 - Meta app **Nora Golf Lab** created in Meta Developers.
 - The **Instagramでメッセージとコンテンツを管理** use case is installed.
 - Instagram Login selected; `instagram_business_basic` and `instagram_business_content_publish` have been added and show “テスト準備完了”.
 - GitHub publishing and verification scripts now use **`graph.instagram.com/v26.0`** and authenticate the actual Instagram Login user by `GET /me?fields=id,username`.
 - Mixed media draft is at `posts/2026-10-10-menard/instagram-carousel.json`. It remains **draft**, and no post has been sent from GitHub.
-- Meta access token has **not** yet been registered with GitHub.
+- Meta Instagram Login access token has been registered in GitHub Actions secrets and verified.
 
 ## Next UI steps (account-holder action)
 
