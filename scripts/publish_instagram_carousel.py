@@ -157,7 +157,8 @@ def main():
             payload.update({"media_type": "VIDEO", "video_url": media_url})
         created = api("POST", f"{ig_user_id}/media", token, payload)
         container_id = created["id"]
-        await_ready(token, container_id)
+        if item["type"] == "video":
+            await_ready(token, container_id)
         children.append(container_id)
         print(f"Ready: {item['type']} container {len(children)}/{len(items)}")
 
