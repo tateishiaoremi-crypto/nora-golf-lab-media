@@ -50,12 +50,13 @@
     },
     {
       "type": "video",
-      "path": "posts/2026-10-10-menard/carousel/swing-05.mp4",
+      "path": "posts/2026-10-10-menard/carousel/swing-05-mori.mp4",
       "source_interval_seconds": [
         20,
         25
       ],
-      "framing_approved": false
+      "framing_approved": false,
+      "name": "森井"
     },
     {
       "type": "image",
