@@ -1,40 +1,92 @@
-# Instagram direct publishing setup — nora_golf_lab
+# nora_golf_lab — Meta Instagram API initial setup
 
-## Current status (2026-10-14)
-- GitHub Actions draft preflight: **passed**, including video/audio-track inspection.
-- Instagram account connected to Windsor.ai: `nora_golf_lab` (Instagram user ID `17841428397719857`).
-- Windsor.ai's available carousel action supports **images only**, not mixed photos/videos.
-- Mixed media is handled here by the Instagram Graph API directly.
-- **No Meta access token has been added to GitHub Actions yet. No mixed carousel has been published.**
+Updated: 2026-10-14. Publishing code uses Meta Graph API **v26.0**.
+The project uses **Instagram API with Facebook Login** (not Instagram Login), because
+the Instagram professional account was previously connected to a Facebook Page.
 
-## One-time human permission step (never send passwords or access tokens in chat)
-1. Sign in to [Meta for Developers](https://developers.facebook.com/apps/) and use/create a Meta app with Instagram content publishing. The Instagram Professional account must be connected to a Facebook Page if using **Instagram API with Facebook Login**. A Facebook Page named "Nora Golf Lab" has previously been discussed; check that it is the linked Page.
-2. Grant the app publishing access for your Instagram account. For the Facebook Login route, obtain permissions `pages_show_list`, `pages_read_engagement`, `instagram_basic`, and `instagram_content_publish`. Use an authorized **Page Access Token** associated with the connected Instagram professional account. To inspect linked Page tokens/accounts, the official route is `/me/accounts?fields=name,access_token,instagram_business_account`. Where eligible, use the appropriate long-lived credential; expiration/revocation can still require renewal.
-3. Sign in to [this repository's GitHub Actions secrets settings](https://github.com/tateishiaoremi-crypto/nora-golf-lab-media/settings/secrets/actions), choose **New repository secret**, and add exactly:
-   - Name: `INSTAGRAM_GRAPH_TOKEN`
-   - Value: the authorized Page Access Token from the Meta setup.
-   Never add it to a source file, README, manifest, or chat.
-4. Once saved, update `posts/.../instagram-carousel.json` to `"status": "approved"` **only after the user explicitly approves the final media, order and caption**. The commit triggers the GitHub Action and publishes. No new login per post while the credential remains valid.
+## What is already done
+- Public photos/videos are already hosted in this GitHub repository.
+- A mixed photo/video carousel publisher exists at `scripts/publish_instagram_carousel.py`.
+- A GitHub Action exists at `.github/workflows/instagram-carousel.yml`.
+- A draft 2026-10-10 Menard Aoyama carousel was successfully checked (with **no publication**).
+- A nonpublishing auth test is available at `.github/workflows/verify-instagram-connection.yml`.
+- The destination Instagram account is **nora_golf_lab**: ID `17841428397719857`.
 
-**Important:** The user cannot delegate granting Meta account access to ChatGPT: initial authorization requires the account owner's action. The rest of the workflow can be managed through GitHub and this chat.
+## The only unavoidable account-holder steps
 
-## Workflow
-- Script: `scripts/publish_instagram_carousel.py`
-- Action: `.github/workflows/instagram-carousel.yml`
-- Media: public GitHub-hosted images and videos; every URL is pinned to its source commit.
-- An edited manifest in **draft** state runs preflight only.
-- An **approved** manifest checks the Meta token belongs to `nora_golf_lab`, creates and waits for image/video containers, creates the mixed carousel and publishes.
-- Success records `instagram-published.json` to prevent accidental duplicate posting.
-- Failed actions should be inspected before retrying. If a publish succeeded but saving the receipt failed, inspect Instagram before any retry to avoid duplicates.
+1. **Log in to Meta for Developers once** at https://developers.facebook.com/apps/
+   using the Meta/Facebook account that manages your linked Instagram professional account.
+   First check if you already own an app. Otherwise select **Create App** and
+   use `Nora Golf Lab` as the app name. Depending on the current dashboard,
+   use the Instagram content-management use case or **Other / Business** app path.
+   Select the **Instagram API with Facebook Login** integration, not Instagram Login
+   (which uses a different API host/token/scope set).
 
-## Non-negotiable editorial checks BEFORE switching to approved
-- Verify exact score, captions, people and desired slide order.
-- Videos must have original audio correctly synchronized with the visual impact.
-- Ensure SmoothSwing/application watermarks are removed from the **entire video** and covers.
-- Check 4:5 carousel presentation, video frame cropping, text safe zones and visual quality.
-- Use a dedicated non-black cover / first slide. Carousel videos do not necessarily use Reel cover_url behavior.
-- Keep captions and any #bkndr usage consistent with nora_golf_lab policy.
+2. **Grant publishing access to your own account.** In
+   https://developers.facebook.com/tools/explorer/ select your newly created app,
+   select Graph API **v26.0**, request a **User Access Token** with:
+   - `pages_show_list`
+   - `pages_read_engagement`
+   - `instagram_basic`
+   - `instagram_content_publish`
 
-## API references (official Meta)
-- [Meta Instagram API collection](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api)
-- [Meta for Developers](https://developers.facebook.com/documentation/instagram-platform/content-publishing/)
+   Authorize the Facebook Page connected to **nora_golf_lab**. If the app is in
+   development mode, make sure the person authorizing has an app admin/developer
+   role and has the required Page/Instagram permissions.
+
+3. **Obtain a durable Page Access Token.** Do not save the short-lived token
+   from Graph API Explorer directly into GitHub as the final production token.
+   First extend/exchange your User Access Token to a long-lived User token,
+   using Meta's official Graph API token flow. Using that token, call
+
+   `GET /me/accounts?fields=id,name,access_token,instagram_business_account`
+
+   and choose the Facebook Page whose `instagram_business_account.id` corresponds
+   to `17841428397719857` (**nora_golf_lab**). Copy that Page's
+   `access_token`, not the short-lived User token. Token lifetime depends on
+   Meta account/app settings; it may expire or be revoked, so reauthorization
+   should be monitored. Never send a token or App Secret into ChatGPT.
+
+4. **Save the token securely once** at
+   https://github.com/tateishiaoremi-crypto/nora-golf-lab-media/settings/secrets/actions
+   → **New repository secret**:
+   - Secret name: `INSTAGRAM_GRAPH_TOKEN`
+   - Secret value: the authorized **Page Access Token**
+
+   Do **not** store it in code, manifest, README, images or chat.
+
+5. **Run a no-publication connection check.** Once the secret has been saved,
+   from this chat the assistant can trigger
+   `.github/workflows/verify-instagram-connection.yml` by updating
+   `connection-check/verify.txt`; or in GitHub Actions manually select
+   **Verify Meta Instagram connection → Run workflow**.
+   The test confirms account ID and username, and creates a temporary
+   image media container, but intentionally **never calls media_publish**.
+
+6. **Review before first real publication.** The first 2026-10-10 carousel is
+   currently a **draft**, not approved. Its source JPEGs are 1080×1350 (4:5);
+   its swing video is 720×1280 (9:16). Confirm how that video is framed for a
+   4:5 carousel; check audio sync, the full video's app/watermark cleanup, exact
+   numbers, people, caption and order. Only after explicit approval switch the
+   manifest's `status` to `approved`, which triggers the publishing Action.
+
+## Automatic operation after the initial step
+1. User supplies files and copy direction in ChatGPT.
+2. Edited media is uploaded to this GitHub repository.
+3. ChatGPT verifies media and sends a preview for explicit publication approval.
+4. Approved manifest is committed; GitHub Action calls Meta's Graph API.
+5. Successful publication records `instagram-published.json` with its media ID.
+
+The account owner will only need to sign in again when permissions/tokens are
+invalidated, expire or require renewal, or Meta requests an account check.
+The user may need to authorize additional scope if we later add analytics,
+Stories or other features; these are separate from the mixed carousel setup.
+
+**Windsor.ai should remain connected until the API has successfully
+published and verified the needed post types.**
+
+## Reference
+- https://www.postman.com/meta/instagram/folder/u4g5a2a/instagram-api-with-facebook-login
+- https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api
+- https://developers.facebook.com/docs/graph-api/guides/explorer/
+- https://developers.facebook.com/docs/graph-api/changelog/versions/
