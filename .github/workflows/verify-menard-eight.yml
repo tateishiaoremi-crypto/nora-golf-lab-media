@@ -1,0 +1,26 @@
+name: Verify Menard eight-item carousel without publishing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/2026-10-10-menard/verify-eight-trigger.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffprobe for format checks
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Validate eight-item carousel without posting
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        run: python3 scripts/check_eight_item_carousel.py
