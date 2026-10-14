@@ -1,0 +1,22 @@
+name: Verify Meta Instagram connection
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "connection-check/verify.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Meta token, Instagram account and publish permission
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        run: python3 scripts/check_instagram_connection.py
