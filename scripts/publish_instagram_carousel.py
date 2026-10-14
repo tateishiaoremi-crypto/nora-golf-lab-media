@@ -16,9 +16,8 @@ import urllib.request
 
 REPOSITORY = "tateishiaoremi-crypto/nora-golf-lab-media"
 EXPECTED_USERNAME = "nora_golf_lab"
-EXPECTED_IG_ID = "17841428397719857"
 VERSION = os.getenv("INSTAGRAM_GRAPH_VERSION", "v26.0")
-BASE = f"https://graph.facebook.com/{VERSION}"
+BASE = f"https://graph.instagram.com/{VERSION}"
 ROOT = Path.cwd().resolve()
 
 
@@ -138,10 +137,13 @@ def main():
     if not git_sha or len(git_sha) < 20:
         raise RuntimeError("Missing pinned GITHUB_SHA; no post made")
 
-    identity = api("GET", f"{EXPECTED_IG_ID}?fields=id,username", token)
+    identity = api("GET", "me?fields=id,username", token)
     if identity.get("username") != EXPECTED_USERNAME:
         raise RuntimeError("Token account mismatch; refusing to publish")
-    print("Meta authentication OK: nora_golf_lab")
+    ig_user_id = str(identity.get("id", ""))
+    if not ig_user_id.isdigit():
+        raise RuntimeError("Authenticated Instagram account id is invalid")
+    print("Meta Instagram Login authentication OK: nora_golf_lab")
     children = []
     for item in items:
         media_url = (
@@ -153,20 +155,20 @@ def main():
             payload["image_url"] = media_url
         else:
             payload.update({"media_type": "VIDEO", "video_url": media_url})
-        created = api("POST", f"{EXPECTED_IG_ID}/media", token, payload)
+        created = api("POST", f"{ig_user_id}/media", token, payload)
         container_id = created["id"]
         await_ready(token, container_id)
         children.append(container_id)
         print(f"Ready: {item['type']} container {len(children)}/{len(items)}")
 
-    parent = api("POST", f"{EXPECTED_IG_ID}/media", token, {
+    parent = api("POST", f"{ig_user_id}/media", token, {
         "media_type": "CAROUSEL",
         "children": ",".join(children),
         "caption": manifest["caption"],
     })
     parent_id = parent["id"]
     await_ready(token, parent_id)
-    result = api("POST", f"{EXPECTED_IG_ID}/media_publish", token, {
+    result = api("POST", f"{ig_user_id}/media_publish", token, {
         "creation_id": parent_id
     })
     media_id = result["id"]
