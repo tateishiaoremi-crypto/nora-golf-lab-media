@@ -2,24 +2,65 @@
   "version": 1,
   "username": "nora_golf_lab",
   "status": "draft",
-  "caption": "90は打たないと誓ったのに。\n\n10/10 メナード青山。まさかの90。笑\n良かったショットもミスも、全部記録。\n\n#nora_golf_lab #ゴルフ #ゴルフスイング #bkndr",
+  "caption": "90は打たないと誓ったのに。\n\nメナード青山、IN45 / OUT45 の90。笑\nパット31、OB5。そら90いくわ。😭\n\n仲間のスイングもまとめて1投稿に。\n森井、さすがのスイング⛳️\n前夜祭で吐いてたのに朝イチこれ打てるのは、酒を言い訳に出来んくなるわ😭\n\n次は片山津・白山コース。\n\n#nora_golf_lab #ゴルフ #ゴルフ仲間 #ゴルフスイング #bkndr",
   "items": [
+    {
+      "type": "image",
+      "path": "posts/2026-10-10-menard/carousel/cover.jpg"
+    },
     {
       "type": "image",
       "path": "posts/2026-10-10-menard/photo-2.jpg"
     },
     {
-      "type": "image",
-      "path": "posts/2026-10-10-menard/photo-1.jpg"
+      "type": "video",
+      "path": "posts/2026-10-10-menard/carousel/swing-01.mp4",
+      "source_interval_seconds": [
+        0,
+        5
+      ],
+      "framing_approved": false
+    },
+    {
+      "type": "video",
+      "path": "posts/2026-10-10-menard/carousel/swing-02.mp4",
+      "source_interval_seconds": [
+        5,
+        10
+      ],
+      "framing_approved": false
+    },
+    {
+      "type": "video",
+      "path": "posts/2026-10-10-menard/carousel/swing-03.mp4",
+      "source_interval_seconds": [
+        10,
+        15
+      ],
+      "framing_approved": false
+    },
+    {
+      "type": "video",
+      "path": "posts/2026-10-10-menard/carousel/swing-04.mp4",
+      "source_interval_seconds": [
+        15,
+        20
+      ],
+      "framing_approved": false
+    },
+    {
+      "type": "video",
+      "path": "posts/2026-10-10-menard/carousel/swing-05.mp4",
+      "source_interval_seconds": [
+        20,
+        25
+      ],
+      "framing_approved": false
     },
     {
       "type": "image",
       "path": "posts/2026-10-10-menard/photo-3.jpg"
-    },
-    {
-      "type": "video",
-      "path": "posts/2026-10-10-menard/swings.mp4"
     }
   ],
-  "validation_run": 3
+  "editing_notes": "Split each 5-second section from the same video/audio source. Original frame y=230..1130; do not publish without audiovisual spot-check and explicit approval."
 }
