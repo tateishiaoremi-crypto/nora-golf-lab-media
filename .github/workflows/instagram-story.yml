@@ -1,0 +1,33 @@
+name: Publish approved Instagram story
+on:
+  push:
+    branches: [main]
+    paths: ['stories/**/instagram-story.json']
+permissions:
+  contents: write
+concurrency:
+  group: instagram-story-publishing
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Publish approved story and verify result
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'nora-golf-lab-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          mapfile -t paths < <(git diff --name-only HEAD^ HEAD -- ':(glob)stories/**/instagram-story.json')
+          for manifest in "${paths[@]}"; do
+            python scripts/publish_instagram_story.py "$manifest"
+          done
