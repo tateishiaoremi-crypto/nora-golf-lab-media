@@ -1,0 +1,34 @@
+name: Publish approved Instagram reel
+on:
+  push:
+    branches: [main]
+    paths: ['posts/**/instagram-reel.json']
+permissions:
+  contents: write
+concurrency:
+  group: instagram-reel-publishing
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Publish approved reel and verify
+        env:
+          INSTAGRAM_GRAPH_TOKEN: ${{ secrets.INSTAGRAM_GRAPH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'nora-golf-lab-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          python -m py_compile scripts/publish_instagram_reel.py
+          mapfile -t paths < <(git diff --name-only HEAD^ HEAD -- ':(glob)posts/**/instagram-reel.json')
+          for manifest in "${paths[@]}"; do
+            python scripts/publish_instagram_reel.py "$manifest"
+          done
