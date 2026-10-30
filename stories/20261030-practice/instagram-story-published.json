@@ -1,6 +1,7 @@
 {
-  "status": "publishing",
+  "status": "published",
   "container_id": "18121207783946591",
   "source_commit": "174ab412b5b49c798d042ccac639fe8df5173ea9",
-  "sha256": "b393d89cf82a53c17c99828c7af1bc8dc9a0c8a7a21ddc2a049ad248a94e6867"
+  "sha256": "b393d89cf82a53c17c99828c7af1bc8dc9a0c8a7a21ddc2a049ad248a94e6867",
+  "instagram_media_id": "18123019759979521"
 }
