@@ -1,31 +1,39 @@
 {
   "status": "draft_not_published",
-  "source": "posts/2026-10-10-menard/swings.mp4",
+  "sources": [
+    "posts/2026-10-10-menard/swings.mp4",
+    "posts/2026-10-10-menard/all-in-one.mp4"
+  ],
   "duration": 19.021333,
   "video_audio_cut_from_matching_intervals": true,
   "no_audio_offset_applied": true,
   "segments": [
     {
+      "source": "swings.mp4",
       "start": 0.0,
       "duration": 3.8,
       "text": "もう絶対に\n90は打たない！"
     },
     {
+      "source": "swings.mp4",
       "start": 5.0,
       "duration": 3.8,
       "text": "85も打ちたくない！"
     },
     {
+      "source": "swings.mp4",
       "start": 10.0,
       "duration": 3.8,
       "text": "毎回そう誓います。笑"
     },
     {
-      "start": 15.0,
+      "source": "all-in-one.mp4",
+      "start": 3.25,
       "duration": 3.8,
       "text": "結果、90。\nOB5。笑"
     },
     {
+      "source": "swings.mp4",
       "start": 20.0,
       "duration": 3.8,
       "text": "みんなも\nそんなことない？笑"
