@@ -1,0 +1,37 @@
+name: Build Nora Menard 90-vow reel draft (no publishing)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'posts/2026-10-31-90-vow/assemble-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-cjk
+          python -m pip install --quiet pillow
+      - name: Create unpublished reel, cover, and quality-check report
+        run: python scripts/build_90_reel.py
+      - name: Commit draft files only (never publish)
+        run: |
+          set -euo pipefail
+          git config user.name 'nora-golf-lab-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          base='posts/2026-10-31-90-vow'
+          git add "$base/reel.mp4" "$base/cover.jpg" "$base/caption.txt" "$base/qc.json" "$base"/preview-*.jpg
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Store Menard 90-vow unpublished reel [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
