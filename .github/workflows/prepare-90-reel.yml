@@ -1,0 +1,50 @@
+name: Prepare Menard 90 vow Reel upload manifest (draft only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'posts/2026-10-31-90-vow/prepare-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Validate selected finished reel and create draft manifest
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          root=Path('posts/2026-10-31-90-vow')
+          out=root/'instagram-reel.json'
+          assert not out.exists(), 'Manifest already exists; refusing to overwrite'
+          assert not (root/'instagram-reel-published.json').exists(), 'Publication receipt already exists'
+          qc=json.loads((root/'qc.json').read_text())
+          assert qc['status']=='draft_not_published'
+          assert abs(qc['duration']-19.021333)<0.1
+          assert qc['video_audio_cut_from_matching_intervals'] is True
+          assert qc['no_audio_offset_applied'] is True
+          caption=(root/'caption.txt').read_text(encoding='utf-8').strip()
+          assert '誓います' in caption and '#bkndr' in caption
+          assets={}
+          for key, filename in [('video','reel.mp4'),('cover','cover.jpg')]:
+              data=(root/filename).read_bytes()
+              assert len(data)>100000
+              assets[key]={'path':str(root/filename),'sha256':hashlib.sha256(data).hexdigest()}
+          obj={'version':1,'status':'draft','username':'nora_golf_lab','caption':caption,'video':assets['video'],'cover':assets['cover'],'approval_note':'The user approved the exact reel and caption on 2026-10-31. A separate change to approved is required before publishing.'}
+          out.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('DRAFT_READY',str(out),len(caption))
+          PY
+      - name: Commit prepared draft manifest without publishing
+        run: |
+          set -euo pipefail
+          git config user.name 'nora-golf-lab-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add posts/2026-10-31-90-vow/instagram-reel.json
+          git commit -m 'Prepare Menard 90-vow reel upload manifest draft [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
