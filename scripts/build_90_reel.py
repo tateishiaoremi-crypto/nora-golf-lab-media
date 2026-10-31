@@ -67,7 +67,7 @@ for i,(start,dur,txt) in enumerate(SCENES,1):
     clip=TMP/f"segment-{i:02}.mp4"
     clip_names.append(clip)
     run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y",
-         "-i",str(SRC),"-ss",str(start),"-t",str(dur),
+         "-ss",str(start),"-i",str(SRC),
          "-loop","1","-i",str(png),
          "-filter_complex",filter_base(),"-map","[v]","-map","0:a:0",
          "-r","30","-c:v","libx264","-preset","medium","-crf","20",
@@ -82,18 +82,9 @@ listfile.write_text("".join("file '"+str(p.resolve())+"'\n" for p in clip_names)
 REEL=OUT/"reel.mp4"
 run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(listfile),"-c","copy","-movflags","+faststart",str(REEL)])
 
-# Make a distinct cover based on a real mid-swing frame (never black).
-coverbase=TMP/"coverbase.jpg"
+# A separately rendered impact-frame cover with the finished title (not a black frame).
 run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y",
-     "-ss","2.1","-i",str(REEL),"-frames:v","1","-q:v","2",str(coverbase)])
-cover=Image.open(coverbase).convert("RGBA")
-v=Image.new("RGBA",(W,H),(0,0,0,0))
-d=ImageDraw.Draw(v)
-d.rectangle([60,1280,1020,1760],fill=(0,0,0,42))
-d.text((85,1320),"90はもう打たない。",font=font(76),fill=(255,255,255,255))
-d.text((85,1445),"いや、85も。笑",font=font(66),fill=(255,255,255,255))
-cover=Image.alpha_composite(cover,v).convert("RGB")
-cover.save(OUT/"cover.jpg",quality=90,subsampling=0)
+     "-ss","2.1","-i",str(REEL),"-frames:v","1","-q:v","2",str(OUT/"cover.jpg")])
 
 caption="""もう絶対に90は打たない！
 いや、85も打ちたくない！
