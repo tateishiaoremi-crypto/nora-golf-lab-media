@@ -1,3 +1,5 @@
 Build request: unpublished 19-second reel from Menard Aoyama synchronized shots. Corrected copy uses 誓います. 2026-10-31.
 
 Run draft reel build with audio verification.
+
+Revision 2: use authentic Menard scorecard in fourth scene, retain synchronized audio.
