@@ -38,7 +38,7 @@ def multiline_center(draw,lines,y,sz=78,color=(255,255,255,255)):
         draw.text(((W-tw)//2,y),line,font=f,fill=color)
         y+=max(hh+32,100)
 
-def overlay_image(text,out_path,cover=False):
+def overlay_image(text,out_path,cover=False,hide_header=False):
     img=Image.new("RGBA",(W,H),(0,0,0,0))
     pix=img.load()
     # Gentle graduated shading on the golf video, not a solid black banner.
@@ -49,11 +49,12 @@ def overlay_image(text,out_path,cover=False):
             pix[ix,y]=(0,0,0,alpha)
     d=ImageDraw.Draw(img)
     gold=(203,171,101,255)
-    d.text((85,220),"NORA GOLF LAB",font=font(35),fill=gold)
-    d.text((85,268),"MENARD AOYAMA  |  2026.10.10",font=font(23,False),fill=(255,255,255,240))
-    d.line((85,310,220,310),fill=gold,width=4)
+    if not hide_header:
+        d.text((85,220),"NORA GOLF LAB",font=font(35),fill=gold)
+        d.text((85,268),"MENARD AOYAMA  |  2026.10.10",font=font(23,False),fill=(255,255,255,240))
+        d.line((85,310,220,310),fill=gold,width=4)
     lines=text.split("\n")
-    y=1440 if len(lines)==2 else 1510
+    y=(1240 if cover else (1440 if len(lines)==2 else 1510))
     multiline_center(d,lines,y,80)
     img.save(out_path)
 
@@ -64,7 +65,7 @@ def filter_base():
 
 clip_names=[]
 for i,(start,dur,txt) in enumerate(SCENES,1):
-    png=TMP/f"title-{i}.png"; overlay_image(txt,png)
+    png=TMP/f"title-{i}.png"; overlay_image(txt,png,hide_header=(i==4))
     clip=TMP/f"segment-{i:02}.mp4"
     scene_source=SCORE_SRC if i==4 else SRC
     clip_names.append(clip)
@@ -84,9 +85,13 @@ listfile.write_text("".join("file '"+str(p.resolve())+"'\n" for p in clip_names)
 REEL=OUT/"reel.mp4"
 run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(listfile),"-c","copy","-movflags","+faststart",str(REEL)])
 
-# A separately rendered impact-frame cover with the finished title (not a black frame).
+# Dedicated cover: same real impact frame with a title positioned within the profile-grid crop.
+cover_png=TMP/"cover-title.png"
+overlay_image("もう絶対に\n90は打たない！",cover_png,cover=True)
 run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y",
-     "-ss","2.1","-i",str(REEL),"-frames:v","1","-q:v","2",str(OUT/"cover.jpg")])
+     "-ss","2.1","-i",str(SRC),"-loop","1","-i",str(cover_png),
+     "-filter_complex",filter_base(),"-map","[v]","-frames:v","1",
+     "-q:v","2",str(OUT/"cover.jpg")])
 
 caption="""もう絶対に90は打たない！
 いや、85も打ちたくない！
