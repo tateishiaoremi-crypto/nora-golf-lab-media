@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "draft",
+  "status": "approved",
   "username": "nora_golf_lab",
   "caption": "もう絶対に90は打たない！\nいや、85も打ちたくない！\n\nって、毎回そう誓います。笑\n\nそれでもメナード青山は90。\nOB5。そらそうなるわ。😭\n\nこれ、ゴルファーあるあるやと思うんやけど、\nみんなもそんなことない？笑\n\n#ゴルフ #ゴルフスイング #ラウンド記録 #メナード青山 #野良ゴルファー #nora_golf_lab #bkndr",
   "video": {
@@ -11,5 +11,5 @@
     "path": "posts/2026-10-31-90-vow/cover.jpg",
     "sha256": "7856310eee47a278bb2314d2903aae643055842fdea5ea08ac884fc5a2d5cf64"
   },
-  "approval_note": "The user approved the exact reel and caption on 2026-10-31. A separate change to approved is required before publishing."
+  "approval_note": "User approved the exact 19-second reel, cover, and caption on 2026-10-31 at 11:09 JST by saying オッケ！. Publish once via the verified existing GitHub Meta API Reel workflow."
 }
