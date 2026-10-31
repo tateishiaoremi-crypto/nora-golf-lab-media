@@ -6,6 +6,7 @@ import subprocess, json, math, os
 
 ROOT=Path(__file__).resolve().parent.parent
 SRC=ROOT/"posts/2026-10-10-menard/swings.mp4"
+SCORE_SRC=ROOT/"posts/2026-10-10-menard/all-in-one.mp4"
 OUT=ROOT/"posts/2026-10-31-90-vow"
 OUT.mkdir(parents=True,exist_ok=True)
 TMP=OUT/"_tmp"; TMP.mkdir(exist_ok=True)
@@ -16,7 +17,7 @@ SCENES=[
     (0.0,3.8,"もう絶対に\n90は打たない！"),
     (5.0,3.8,"85も打ちたくない！"),
     (10.0,3.8,"毎回そう誓います。笑"),
-    (15.0,3.8,"結果、90。\nOB5。笑"),
+    (3.25,3.8,"結果、90。\nOB5。笑"),
     (20.0,3.8,"みんなも\nそんなことない？笑"),
 ]
 
@@ -65,9 +66,10 @@ clip_names=[]
 for i,(start,dur,txt) in enumerate(SCENES,1):
     png=TMP/f"title-{i}.png"; overlay_image(txt,png)
     clip=TMP/f"segment-{i:02}.mp4"
+    scene_source=SCORE_SRC if i==4 else SRC
     clip_names.append(clip)
     run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-y",
-         "-ss",str(start),"-i",str(SRC),
+         "-ss",str(start),"-i",str(scene_source),
          "-loop","1","-i",str(png),
          "-filter_complex",filter_base(),"-map","[v]","-map","0:a:0",
          "-r","30","-c:v","libx264","-preset","medium","-crf","20",
@@ -107,6 +109,6 @@ duration=float(probe["format"]["duration"])
 assert 18.7<duration<19.4,(duration,streams)
 assert any(s["type"]=="audio" for s in streams)
 assert any(s["type"]=="video" and s.get("width")==1080 and s.get("height")==1920 for s in streams)
-result={"status":"draft_not_published","source":"posts/2026-10-10-menard/swings.mp4","duration":duration,"video_audio_cut_from_matching_intervals":True,"no_audio_offset_applied":True,"segments":[{"start":start,"duration":dur,"text":txt} for start,dur,txt in SCENES],"streams":streams,"source_has_original_audio":True,"visual_check":"Five frame previews available; human check required"}
+result={"status":"draft_not_published","sources":["posts/2026-10-10-menard/swings.mp4","posts/2026-10-10-menard/all-in-one.mp4"],"duration":duration,"video_audio_cut_from_matching_intervals":True,"no_audio_offset_applied":True,"segments":[{"source":("all-in-one.mp4" if i==4 else "swings.mp4"),"start":start,"duration":dur,"text":txt} for i,(start,dur,txt) in enumerate(SCENES,1)],"streams":streams,"source_has_original_audio":True,"visual_check":"Five frame previews available; human check required"}
 (OUT/"qc.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf8")
 print("REEL_DRAFT_READY "+json.dumps(result,ensure_ascii=False))
