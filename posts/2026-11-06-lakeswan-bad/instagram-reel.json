@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "draft",
+  "status": "approved",
   "username": "nora_golf_lab",
   "caption": "2026.11.06 レークスワンカントリー⛳️\n\n【残念集😢】\nどこ打つねん、どこ向いてんねん💦笑\n\n#ゴルフ #ゴルフスイング #ラウンド記録 #レークスワンカントリー #野良ゴルファー #nora_golf_lab #bkndr",
   "video": {
@@ -11,5 +11,9 @@
     "path": "posts/2026-11-06-lakeswan-bad/cover.jpg",
     "sha256": "47a3d0d2b61d7cd90261a7c4e36eec3e9f8ae030e105b228bf1ac6f1ae9d930b"
   },
-  "approval_note": "User approved the fixed-label good and bad compilation videos and requested publication on 2026-11-08. Continue the prior authorized publication once, preserving the approved video and cover bytes."
+  "approval_note": "User approved the fixed-label good and bad compilation videos and requested publication on 2026-11-08. Continue the prior authorized publication once, preserving the approved video and cover bytes.",
+  "dedupe_markers": [
+    "残念集",
+    "レークスワン"
+  ]
 }
