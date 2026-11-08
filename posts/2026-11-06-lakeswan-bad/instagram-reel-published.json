@@ -1,7 +1,8 @@
 {
-  "status": "publishing",
+  "status": "published",
   "container_id": "18123096808946591",
   "source_commit": "678c60e83fb846845a0f19356e75ea5995e0d39e",
   "video_sha256": "29bdab2ba5fe79cbf5e3613e65fe29890af4dd6213b613c6f10c45b0f68435fa",
-  "cover_sha256": "47a3d0d2b61d7cd90261a7c4e36eec3e9f8ae030e105b228bf1ac6f1ae9d930b"
+  "cover_sha256": "47a3d0d2b61d7cd90261a7c4e36eec3e9f8ae030e105b228bf1ac6f1ae9d930b",
+  "instagram_media_id": "18121757807097676"
 }
