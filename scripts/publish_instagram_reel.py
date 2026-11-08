@@ -25,6 +25,15 @@ identity=api('GET','me?fields=id,username',token)
 if identity.get('username')!=EXPECTED_USERNAME:
     raise ValueError('Wrong Instagram account')
 uid=identity['id']
+markers=m.get('dedupe_markers',[])
+if markers:
+    if not isinstance(markers,list) or not all(isinstance(x,str) and x.strip() for x in markers):
+        raise ValueError('Invalid duplicate-check markers')
+    recent=api('GET',f'{uid}/media?fields=id,permalink,caption,timestamp&limit=100',token)
+    for prior in recent.get('data',[]):
+        caption=prior.get('caption','')
+        if caption.strip()==m['caption'].strip() or all(marker in caption for marker in markers):
+            raise RuntimeError('Matching post already exists; publication stopped: '+json.dumps(prior,ensure_ascii=False))
 sha=os.environ['GITHUB_SHA']
 def url(key):
     return f'https://raw.githubusercontent.com/{REPOSITORY}/{sha}/'+quote(m[key]['path'],safe='/')
