@@ -1,0 +1,69 @@
+name: Assemble approved Lake Swan media
+on:
+  push:
+    branches: [main]
+    paths: ['ingest/lakeswan-20261106/request.json']
+permissions:
+  contents: write
+concurrency:
+  group: lakeswan-media-ingest
+  cancel-in-progress: false
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble and verify unchanged approved files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          root=Path.cwd().resolve()
+          request=root/'ingest/lakeswan-20261106/request.json'
+          data=json.loads(request.read_text())
+          def resolve(relative):
+              p=(root/relative).resolve()
+              if not p.is_relative_to(root):
+                  raise ValueError('Invalid path')
+              return p
+          for item in data['videos']:
+              target=resolve(item['path'])
+              if not item['path'].startswith('posts/2026-11-06-lakeswan-') or target.name!='reel.mp4':
+                  raise ValueError('Unexpected output')
+              assembled=bytearray()
+              for part in item['parts']:
+                  p=resolve(part)
+                  if p.parent!=request.parent or p.suffix!='.part':
+                      raise ValueError('Invalid chunk path')
+                  assembled.extend(p.read_bytes())
+              if len(assembled)!=item['size_bytes'] or hashlib.sha256(assembled).hexdigest()!=item['sha256']:
+                  raise ValueError('Approved video bytes do not match')
+              if target.exists() and hashlib.sha256(target.read_bytes()).hexdigest()!=item['sha256']:
+                  raise ValueError('Existing video differs')
+              target.parent.mkdir(parents=True,exist_ok=True)
+              target.write_bytes(assembled)
+              meta=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-show_format','-of','json',str(target)]))
+              video=next(s for s in meta['streams'] if s['codec_type']=='video')
+              audio=next(s for s in meta['streams'] if s['codec_type']=='audio')
+              if (video['width'],video['height'])!=(1080,1920) or video['codec_name']!='h264' or audio['codec_name']!='aac':
+                  raise ValueError('Unexpected video or audio format')
+              print('VERIFIED_UNCHANGED_VIDEO',item['path'],item['sha256'],meta['format']['duration'])
+          for cover in data['covers']:
+              if hashlib.sha256(resolve(cover['path']).read_bytes()).hexdigest()!=cover['sha256']:
+                  raise ValueError('Cover bytes differ')
+              print('VERIFIED_UNCHANGED_COVER',cover['path'])
+          for p in request.parent.iterdir():
+              if p.suffix=='.part' or p==request:
+                  p.unlink()
+          PY
+          git config user.name 'nora-golf-lab-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add posts/2026-11-06-lakeswan-good posts/2026-11-06-lakeswan-bad ingest/lakeswan-20261106
+          if ! git diff --cached --quiet; then
+            git commit -m 'Store approved Lake Swan reel files without edits [skip ci]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
