@@ -144,6 +144,21 @@ def main():
     if not ig_user_id.isdigit():
         raise RuntimeError("Authenticated Instagram account id is invalid")
     print("Meta Instagram Login authentication OK: nora_golf_lab")
+    if manifest.get("dedupe_caption"):
+        recent = api("GET", f"{ig_user_id}/media?fields=id,caption,permalink,media_type&limit=50", token)
+        caption = manifest["caption"].replace("\r\n", "\n").strip()
+        for prior in recent.get("data", []):
+            if str(prior.get("caption", "")).replace("\r\n", "\n").strip() == caption:
+                receipt_path.write_text(json.dumps({
+                    "instagram_media_id": str(prior["id"]),
+                    "permalink": prior.get("permalink", ""),
+                    "source_manifest": str(manifest_path.relative_to(ROOT)),
+                    "source_commit": git_sha,
+                    "duplicate_prevented": True,
+                }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                print(f"ALREADY PUBLISHED: matching approved caption; prevented duplicate post. Instagram URL: {prior.get('permalink', '')}")
+                return
+        print("Duplicate check passed: no matching caption in the latest 50 posts")
     children = []
     for item in items:
         media_url = (
@@ -174,7 +189,7 @@ def main():
     })
     media_id = result["id"]
     try:
-        info = api("GET", f"{media_id}?fields=id,permalink", token)
+        info = api("GET", f"{media_id}?fields=id,permalink,media_type,caption,children{{id,media_type}}", token)
     except Exception as error:
         print(f"Permalink retrieval failed (post WAS published): {type(error).__name__}")
         info = {}
@@ -183,6 +198,11 @@ def main():
         "permalink": info.get("permalink", ""),
         "source_manifest": str(manifest_path.relative_to(ROOT)),
         "source_commit": git_sha,
+        "verification": {
+            "media_type": info.get("media_type", ""),
+            "children_count": len(info.get("children", {}).get("data", [])),
+            "caption_matches_approved": str(info.get("caption", "")).strip() == manifest["caption"].strip(),
+        },
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"PUBLISHED Instagram media id={media_id}")
     if info.get("permalink"):
